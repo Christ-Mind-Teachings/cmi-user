@@ -1,0 +1,33 @@
+{
+  "name": "cmi-user",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bin/index.js",
+  "files": [
+    "bin"
+  ],
+  "scripts": {
+    "test": "jest",
+    "destroy": "claudia destroy",
+    "create": "npm run transpile && claudia create --name cmi2-user --region us-east-1 --timeout 10 --api-module bin/index --policies policies",
+    "update": "npm run transpile && claudia --no-optional-dependencies update",
+    "transpile": "babel --presets es2015 src --out-dir bin",
+    "precreate": "eslint src/**",
+    "preupdate": "eslint src/**"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "claudia": "^2.10.0",
+    "eslint": "^3.19.0",
+    "jest": "^22.4.3"
+  },
+  "dependencies": {
+    "claudia-api-builder": "^2.4.1"
+  },
+  "optionalDependencies": {
+    "aws-sdk": "^2.35.0"
+  }
+}
