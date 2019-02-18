@@ -25,7 +25,8 @@
     "jest": "^22.4.3"
   },
   "dependencies": {
-    "claudia-api-builder": "^2.4.1"
+    "claudia-api-builder": "^2.4.1",
+    "lodash": "^4.17.11"
   },
   "optionalDependencies": {
     "aws-sdk": "^2.35.0"

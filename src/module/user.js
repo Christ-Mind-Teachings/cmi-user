@@ -291,6 +291,85 @@ function addToTopicList(userId, sourceId, newTopicList) {
   });
 }
 
+/*
+ * Add email addresses to the addressList
+ *
+ * We create the addressList if it doesn't exist and
+ * create the userData object if that doesn't exist either.
+ * 
+ * This is an update operation, the "newAddressList" replaces the existing one.
+ */
+function addToMailList(userId, newAddressList) {
+  return new Promise((resolve, reject) => {
+
+    if (newAddressList.length === "undefined" || newAddressList.length === 0) {
+      newAddressList = [];
+    }
+
+    let userData = {};
+    let addressesAdded;
+
+    getUserInfo(userId)
+      .then((response) => {
+        if (response.Item) {
+          //we have userData
+          userData = response.Item.userData;
+          userData.maillist = newAddressList;
+          addressesAdded = userData.maillist.length;
+        }
+        else {
+          //create userData object
+          userData.maillist = newAddressList;
+          addressesAdded = userData.maillist.length;
+        }
+
+        //addresses have been updated or promise resolved and then() exited
+        //- write changes to the database
+        putUserInfo(userId, userData)
+          .then(() => {
+            resolve(`Maillist has ${addressesAdded} addresses.`);
+          })
+          .catch((err) => {
+            reject(err);
+          });
+      })
+      .catch((err) => {
+        reject(err);
+        return;
+      });
+
+  });
+}
+
+/*
+ * Get maillist, return empty array if not present
+ */
+function getMailList(userId) {
+  return new Promise((resolve, reject) => {
+
+    getUserInfo(userId)
+      .then((response) => {
+        if (response.Item) {
+
+          let maillist = response.Item.userData.maillist;
+          if (maillist) {
+            resolve(maillist);
+          }
+          else {
+            resolve([]);
+          }
+        }
+        else {
+          resolve([]);
+        }
+      })
+      .catch((err) => {
+        reject(err);
+      });
+  });
+}
+
+
 module.exports = {
   initialize: function(dev, endpoint) {
     initDB(dev, endpoint);
@@ -298,7 +377,9 @@ module.exports = {
   getUserInfo: getUserInfo,
   putUserInfo: putUserInfo,
   getTopicList: getTopicList,
-  addToTopicList: addToTopicList
+  getMailList: getMailList,
+  addToTopicList: addToTopicList,
+  addToMailList: addToMailList
 };
 
 

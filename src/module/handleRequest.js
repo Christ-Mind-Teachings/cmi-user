@@ -36,6 +36,25 @@ function getUserTopicsParms(parms, userRequest) {
   return parms;
 }
 
+/*
+ * email address list
+ * addressList: [{first,last,address}]
+ */
+function getUserAddressListParms(parms, userRequest) {
+
+  //addressList: array of one or more email addresses
+  // - {first: "string", last: "string", address: "string"}
+  if (!userRequest.addressList) {
+    parms.message.push("Error: body.addressList missing");
+    parms.error = true;
+  }
+  else {
+    parms.addressList = userRequest.addressList;
+  }
+
+  return parms;
+}
+
 function parseRequest(requestType, request) {
   var parms = {message: []};
 
@@ -62,6 +81,9 @@ function parseRequest(requestType, request) {
       break;
     case "addTopics":
       parms = getUserTopicsParms(parms, userRequest);
+      break;
+    case "addAddresses":
+      parms = getUserAddressListParms(parms, userRequest);
       break;
   }
 

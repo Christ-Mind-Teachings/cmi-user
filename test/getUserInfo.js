@@ -3,7 +3,7 @@ const util = require("util");
 
 user.initialize(true, "local");
 
-user.getUserInfo("1234")
+user.getUserInfo("05399539cca9ac38db6db36f5c770ff1")
   .then((userInfo) => {
     console.log("getUserInfo: %s", util.inspect(userInfo, {depth: 6}));
   })

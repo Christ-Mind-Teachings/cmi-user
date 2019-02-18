@@ -3,7 +3,13 @@ const util = require("util");
 
 user.initialize(true, "local");
 
-user.addToTopicList("1234", "10", ["Jim", {value: "robert", topic: "Bob"}, {value: "nasty", topic: "Tits and Ass"}])
+let topics = [
+  {value: "HolySpirit", topic: "Holy Spirit"},
+  "Atonement",
+  "Awakening"
+];
+
+user.addToTopicList("05399539cca9ac38db6db36f5c770ff1", "10", topics)
   .then((userInfo) => {
     console.log("addToTopicList: %s", userInfo);
   })
