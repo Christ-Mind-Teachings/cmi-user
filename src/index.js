@@ -10,6 +10,64 @@ api.post("/request", function(request) {
   return request;
 });
 
+/*
+ * This is the Netlify Indentity Webhook endpoint. It audits user
+ * login and signup events.
+ */
+api.post("/notify", function(request) {
+  db.initialize(false);
+
+  const userEvent = JSON.parse(request.rawBody);
+  console.log("netlify identity notification: ", userEvent);
+
+  var result = {
+    message: "OK"
+  };
+
+  console.log("calling putAuditInfo");
+  return db.putAuditInfo(userEvent)
+    .then((response) => {
+      result.response = response;
+      console.log("/notify error: %o", result);
+      return result;
+    })
+    .catch((err) => {
+      result.message = err.message;
+      console.log("/notify returning: %o", result);
+      return result;
+    });
+});
+
+/*
+ * Audit visitor searches
+ */
+api.post("/audit/search", function(request) {
+  var handleRequest = require("./module/handleRequest");
+  var parms = handleRequest.parse("searchAudit", request);
+
+  var result = {
+    message: "OK"
+  };
+
+  if (parms.error) {
+    result.message = parms.message;
+    return result;
+  }
+
+  db.initialize(false);
+
+  //used only for request parse errors
+  delete parms.message;
+  return db.putSearchAuditInfo(parms)
+    .then(() => {
+      return result;
+    })
+    .catch((err) => {
+      result.message = err.message;
+      return result;
+    });
+});
+
 //create or update userInfo
 api.post("/user", function(request) {
   var handleRequest = require("./module/handleRequest");
@@ -25,7 +83,7 @@ api.post("/user", function(request) {
     return result;
   }
 
-  console.log("putUserInfo(): %o", parms);
+  //console.log("putUserInfo(): %o", parms);
 
   db.initialize(false);
 
@@ -55,7 +113,7 @@ api.post("/user/topics", function(request) {
     return result;
   }
 
-  console.log("addToTopicList(): %o", parms);
+  //console.log("addToTopicList(): %o", parms);
 
   db.initialize(false);
 
@@ -85,7 +143,7 @@ api.post("/user/maillist", function(request) {
     return result;
   }
 
-  console.log("addToMailList(): %o", parms);
+  //console.log("addToMailList(): %o", parms);
 
   db.initialize(false);
 
@@ -108,7 +166,7 @@ api.get("/user/{uid}", function(request) {
     message: "ok"
   };
 
-  console.log("getUserInfo(): %s", userId);
+  //console.log("getUserInfo(): %s", userId);
 
   db.initialize(false);
 
@@ -133,7 +191,7 @@ api.get("/user/{uid}/topics/{sid}", function(request) {
     message: "ok"
   };
 
-  console.log("getTopicList(): %s/%s", userId, sourceId);
+  //console.log("getTopicList(): %s/%s", userId, sourceId);
 
   db.initialize(false);
 
@@ -156,7 +214,7 @@ api.get("/user/{uid}/maillist", function(request) {
     message: "ok"
   };
 
-  console.log("getMailList(): %s", userId);
+  //console.log("getMailList(): %s", userId);
 
   db.initialize(false);
 

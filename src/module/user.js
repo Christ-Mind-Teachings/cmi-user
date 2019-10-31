@@ -6,7 +6,7 @@
  */
 const AWS = require("aws-sdk");
 const differenceWith = require("lodash/differenceWith");
-//const util = require("util");
+const md5 = require("md5");
 
 let table = "users";
 let dbInitialized = false;
@@ -219,7 +219,7 @@ function addToTopicList(userId, sourceId, newTopicList) {
   return new Promise((resolve, reject) => {
 
     if (newTopicList.length === "undefined" || newTopicList.length === 0) {
-      reject("Expecting an array of topics to add, non received.");
+      reject("Expecting an array of topics to add, none received.");
     }
 
     let userData = {};
@@ -369,6 +369,161 @@ function getMailList(userId) {
   });
 }
 
+function initAuditRecord(userEvent) {
+  let audit = {};
+  audit.email = userEvent.user.email;
+  audit.md5 = md5(audit.email);
+  audit.name = userEvent.user.user_metadata.full_name;
+  audit.created = userEvent.user.created_at;
+  audit.updated = userEvent.user.updated_at;
+  audit.login = [];
+  audit.login.push(Date());
+
+  return audit;
+}
+
+function initSearchAuditRecord(searchAudit) {
+  let audit = {};
+  audit.email = searchAudit.userId;
+  audit.md5 = md5(audit.email);
+  audit.search = [];
+
+  return audit;
+}
+
+function updateAuditRecord(userEvent, audit) {
+  audit.name = userEvent.user.user_metadata.full_name;
+  audit.created = userEvent.user.created_at;
+  audit.updated = userEvent.user.updated_at;
+  audit.login = [];
+  audit.login.push(Date());
+
+  return audit;
+}
+
+function putAuditInfo(userEvent) {
+  return new Promise((resolve, reject) => {
+
+    let putParams = {
+      TableName: "audit"
+    };
+
+    if (userEvent.event === "signup") {
+      console.log("signup event");
+      putParams.Item = initAuditRecord(userEvent);
+
+      //save to db
+      db.put(putParams, function(err, data) {
+        if (err) {
+          reject(err);
+        }
+        else {
+          resolve(data);
+        }
+      });
+    }
+    else {
+      //console.log("login event");
+      const email = userEvent.user.email;
+      getAuditInfo(email).then((audit) => {
+        //console.log("return from getAuditInfo: %o", audit);
+        if (!audit) {
+          //console.log("no audit record for: %s", email);
+          audit = initAuditRecord(userEvent);
+        }
+        //if search record added before login event
+        else if (!audit.name) {
+          updateAuditRecord(userEvent, audit);
+        }
+        else {
+          audit.login.push(Date());
+        }
+        putParams.Item = audit;
+
+        //save to db
+        //console.log("updated audit: %o", audit);
+        db.put(putParams, function(err, data) {
+          if (err) {
+            reject(err);
+          }
+          else {
+            resolve(data);
+          }
+        });
+      }).catch((err) => {
+        reject(err);
+      });
+    }
+  });
+}
+
+function getAuditInfo(email) {
+  return new Promise((resolve, reject) => {
+
+    //query parms
+    let getParams = {
+      TableName: "audit",
+      Key: {
+        "email": email
+      }
+    };
+
+    console.log("getAuditInfo email:%s", email);
+
+    db.get(getParams, function(err, data) {
+      if (err) {
+        reject(err.message);
+      }
+      else {
+        //console.log("getAuditInfo found: %o", data);
+        resolve(data.Item);
+      }
+    });
+  });
+}
+
+/*
+ * Add search record to audit table
+ */
+function putSearchAuditInfo(searchAudit) {
+  return new Promise((resolve, reject) => {
+
+    let putParams = {
+      TableName: "audit"
+    };
+
+    console.log("search audit");
+    const email = searchAudit.userId;
+    getAuditInfo(email).then((audit) => {
+      console.log("return from getAuditInfo: %o", audit);
+      if (!audit) {
+        audit = initSearchAuditRecord(searchAudit);
+      }
+      //first search record
+      else if (!audit.search) {
+        audit.search = [];
+      }
+
+      searchAudit.searchTime = Date();
+      delete searchAudit.userId;
+      audit.search.push(searchAudit);
+      putParams.Item = audit;
+
+      //save to db
+      console.log("updated audit: %o", audit);
+      db.put(putParams, function(err, data) {
+        if (err) {
+          reject(err);
+        }
+        else {
+          resolve(data);
+        }
+      });
+    }).catch((err) => {
+      reject(err);
+    });
+  });
+}
 
 module.exports = {
   initialize: function(dev, endpoint) {
@@ -379,7 +534,10 @@ module.exports = {
   getTopicList: getTopicList,
   getMailList: getMailList,
   addToTopicList: addToTopicList,
-  addToMailList: addToMailList
+  addToMailList: addToMailList,
+  putAuditInfo: putAuditInfo,
+  getAuditInfo: getAuditInfo,
+  putSearchAuditInfo: putSearchAuditInfo
 };
 
 

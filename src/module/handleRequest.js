@@ -12,6 +12,43 @@ function getUserInfoParms(parms, userRequest) {
   return parms;
 }
 
+function getSearchAuditParms(parms, userRequest) {
+
+  //search query
+  if (!userRequest.query) {
+    parms.message.push("Error: body.query missing");
+    parms.error = true;
+  }
+  else {
+    parms.query = userRequest.query;
+  }
+
+  //query source
+  if (!userRequest.source) {
+    parms.message.push("Error: body.source missing");
+    parms.error = true;
+  }
+  else {
+    parms.source = userRequest.source;
+  }
+
+  //query result count
+  if (!userRequest.count) {
+    parms.message.push("Error: body.count missing");
+    parms.error = true;
+  }
+  else {
+    parms.count = userRequest.count;
+  }
+
+  //indicates error in running query
+  if (userRequest.error) {
+    parms.error = userRequest.error;
+  }
+
+  return parms;
+}
+
 function getUserTopicsParms(parms, userRequest) {
 
   //source Id: a 2 digit string
@@ -68,6 +105,7 @@ function parseRequest(requestType, request) {
   var userRequest = request.body;
 
   //md5 of email address
+  //=> email address for searchAudit requestType
   if (!userRequest.userId) {
     parms.message.push("Error: body.userId missing");
   }
@@ -84,6 +122,9 @@ function parseRequest(requestType, request) {
       break;
     case "addAddresses":
       parms = getUserAddressListParms(parms, userRequest);
+      break;
+    case "searchAudit":
+      parms = getSearchAuditParms(parms, userRequest);
       break;
   }
 
