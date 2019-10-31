@@ -33,7 +33,7 @@ function getSearchAuditParms(parms, userRequest) {
   }
 
   //query result count
-  if (!userRequest.count) {
+  if (!userRequest.hasOwnProperty("count")) {
     parms.message.push("Error: body.count missing");
     parms.error = true;
   }
