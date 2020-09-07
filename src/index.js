@@ -18,22 +18,19 @@ api.post("/notify", function(request) {
   db.initialize(false);
 
   const userEvent = JSON.parse(request.rawBody);
-  console.log("netlify identity notification: ", userEvent);
+  //console.log("netlify identity notification: ", userEvent);
 
   var result = {
     message: "OK"
   };
 
-  console.log("calling putAuditInfo");
   return db.putAuditInfo(userEvent)
     .then((response) => {
       result.response = response;
-      console.log("/notify error: %o", result);
       return result;
     })
     .catch((err) => {
       result.message = err.message;
-      console.log("/notify returning: %o", result);
       return result;
     });
 });
@@ -180,7 +177,6 @@ api.get("/user/{uid}", function(request) {
       return result;
     });
 });
-
 
 //get bookmark with bid for user with uid
 api.get("/user/{uid}/topics/{sid}", function(request) {
